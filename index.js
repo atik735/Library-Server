@@ -46,7 +46,6 @@ async function run() {
       res.send(result)
 
     })
-
         //get a single Book by id
 
         app.get("/books/:id",async(req,res) =>{
