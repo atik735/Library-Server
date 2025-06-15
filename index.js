@@ -71,7 +71,19 @@ async function run() {
         res.send(result)
       })
 
+      //category book
+      app.get("/books/category/:categoryName",async(req,res) =>{
 
+        const categoryName = req.params.categoryName;
+      const query = {
+      category: { $regex: new RegExp(`^${categoryName}$`, 'i') }
+      };
+        const result = await booksCollection.find(query).toArray()
+        res.send(result)
+
+      })
+
+      
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
