@@ -26,7 +26,7 @@ async function run() {
     await client.connect();
     
     const booksCollection = client.db("booksDB").collection("books")
-    
+    const borrowsCollection = client.db("booksDB").collection("borrows")
     //get item and showed in client
   
     app.get("/books",async(req,res) =>{
@@ -72,18 +72,75 @@ async function run() {
       })
 
       //category book
-      app.get("/books/category/:categoryName",async(req,res) =>{
+ app.get("/books/category/:categoryName",async(req,res) =>{
 
-        const categoryName = req.params.categoryName;
-      const query = {
-      category: { $regex: new RegExp(`^${categoryName}$`, 'i') }
-      };
-        const result = await booksCollection.find(query).toArray()
-        res.send(result)
+    const categoryName = req.params.categoryName.toLowerCase();
 
-      })
+  const allBooks = await booksCollection.find().toArray();
+
+  const filteredBooks = allBooks.filter(book =>
+    book.category?.toLowerCase() === categoryName
+  );
+
+  res.send(filteredBooks);
+});
 
       
+//handle borrow
+//save a borrow book data  in database through post request
+app.post('/borrow-book/:bookId', async(req,res) =>{
+  const id = req.params.bookId
+  const borrowData = req.body
+  // console.log(borrowData)
+  const result = await borrowsCollection.insertOne(borrowData)
+  //update quantity from books collection
+  if (result.acknowledged) {
+    await booksCollection.updateOne(
+    {_id:new ObjectId(id)},
+    {
+    $inc:{
+    quantity: -1,
+    },
+    }
+    )
+  }
+
+  res.send(result)
+})
+
+// get all borrow books data by user email
+
+app.get('/borrow-lists/:email',async(req,res) =>{
+  const userEmail = req.params.email;
+  const filter ={
+    email: userEmail
+  }
+  const allBorrows = await borrowsCollection.find(filter).toArray()
+//   const newBorrows = allBorrows.map(async borrow => {
+//     const borrowId = borrow.bookId
+//     const fullBorrowData = await booksCollection.findOne({
+//       _id: new ObjectId(borrowId)
+//     })
+//     borrow.title = fullBorrowData.name
+//     console.log(borrow)
+//     return borrow
+//   })
+
+  for (const borrow of allBorrows) {
+        const borrowId = borrow.bookId
+    const fullBorrowData = await booksCollection.findOne({
+      _id: new ObjectId(borrowId)
+    })
+    borrow.name = fullBorrowData.name
+    borrow.author = fullBorrowData.author
+    borrow.quantity = fullBorrowData.quantity
+    borrow.rating = fullBorrowData.rating
+    borrow.image = fullBorrowData.image
+    borrow.category = fullBorrowData.category
+  }
+
+  res.send(allBorrows)
+})
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
