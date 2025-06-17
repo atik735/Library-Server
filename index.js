@@ -1,9 +1,9 @@
+require('dotenv').config()
 const express = require('express');
 const cors = require('cors')
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-require('dotenv').config()
 const verifyToken = require('./middleware/firebaseToken');
 
 
@@ -24,7 +24,7 @@ const client = new MongoClient(process.env.MONGODB_URI, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     
     const booksCollection = client.db("booksDB").collection("books")
     const borrowsCollection = client.db("booksDB").collection("borrows")
@@ -93,13 +93,13 @@ app.post('/borrow-book/:bookId', verifyToken, async(req,res) =>{
   const id = req.params.bookId
   const borrowData = req.body
   const email = borrowData.email;
-  console.log(borrowData)
+  // console.log(borrowData)
     const alreadyBorrowed = await borrowsCollection.findOne({
       bookId: borrowData.bookId,
       email,
     });
 
-    console.log(alreadyBorrowed)
+    // console.log(alreadyBorrowed)
     if (alreadyBorrowed) {
       return res.status(200).json({ message: "You have already borrowed this book.", status:true });
     }
@@ -160,7 +160,7 @@ res.send({ updatedResult: result, deletedResult: removeBook });
 })
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
