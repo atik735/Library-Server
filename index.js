@@ -4,6 +4,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+const verifyToken = require('./middleware/firebaseToken');
 
 
 //middleWare
@@ -29,13 +30,13 @@ async function run() {
     const borrowsCollection = client.db("booksDB").collection("borrows")
     //get item and showed in client
   
-    app.get("/books",async(req,res) =>{
+    app.get("/books", async(req,res) =>{
       const allBooks = await booksCollection.find().toArray()
       res.send(allBooks)
     })
     
     //create clientconnection and post
-    app.post("/add-book",async(req,res) =>{
+    app.post("/add-book", verifyToken, async(req,res) =>{
 
       const bookData = req.body;
       const quantity = bookData.quantity;
@@ -57,7 +58,7 @@ async function run() {
 
         //update book
  
-      app.put('/books/:id',async(req,res) =>{
+      app.put('/books/:id', verifyToken, async(req,res) =>{
 
         const id = req.params.id
         const filter = {_id: new ObjectId(id)}
@@ -88,20 +89,26 @@ async function run() {
       
 //handle borrow
 //save a borrow book data  in database through post request
-app.post('/borrow-book/:bookId', async(req,res) =>{
+app.post('/borrow-book/:bookId', verifyToken, async(req,res) =>{
   const id = req.params.bookId
   const borrowData = req.body
-  // console.log(borrowData)
+  const email = borrowData.email;
+  console.log(borrowData)
+    const alreadyBorrowed = await borrowsCollection.findOne({
+      bookId: borrowData.bookId,
+      email,
+    });
+
+    console.log(alreadyBorrowed)
+    if (alreadyBorrowed) {
+      return res.status(200).json({ message: "You have already borrowed this book.", status:true });
+    }
   const result = await borrowsCollection.insertOne(borrowData)
   //update quantity from books collection
   if (result.acknowledged) {
     await booksCollection.updateOne(
     {_id:new ObjectId(id)},
-    {
-    $inc:{
-    quantity: -1,
-    },
-    }
+    { $inc:{ quantity: -1 } }
     )
   }
 
@@ -133,7 +140,7 @@ app.get('/borrow-lists/:email',async(req,res) =>{
 })
 
 //books remove
-app.delete("/return-book/:id",async(req,res) =>{
+app.delete("/return-book/:id", verifyToken, async(req,res) =>{
 
   const id = req.params.id;
   const bookId =req.query.id;
