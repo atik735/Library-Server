@@ -92,8 +92,7 @@ async function run() {
 app.post('/borrow-book/:bookId', verifyToken, async(req,res) =>{
   const id = req.params.bookId
   const borrowData = req.body
-  const email = borrowData.email;
-  // console.log(borrowData)
+  const email = req.user.email;  
     const alreadyBorrowed = await borrowsCollection.findOne({
       bookId: borrowData.bookId,
       email,
