@@ -116,16 +116,6 @@ app.get('/borrow-lists/:email',async(req,res) =>{
     email: userEmail
   }
   const allBorrows = await borrowsCollection.find(filter).toArray()
-//   const newBorrows = allBorrows.map(async borrow => {
-//     const borrowId = borrow.bookId
-//     const fullBorrowData = await booksCollection.findOne({
-//       _id: new ObjectId(borrowId)
-//     })
-//     borrow.title = fullBorrowData.name
-//     console.log(borrow)
-//     return borrow
-//   })
-
   for (const borrow of allBorrows) {
         const borrowId = borrow.bookId
     const fullBorrowData = await booksCollection.findOne({
@@ -140,6 +130,26 @@ app.get('/borrow-lists/:email',async(req,res) =>{
   }
 
   res.send(allBorrows)
+})
+
+//books remove
+app.delete("/return-book/:id",async(req,res) =>{
+
+  const id = req.params.id;
+  const bookId =req.query.id;
+
+   const result = await booksCollection.updateOne(
+    {_id:new ObjectId(bookId)},
+    {
+    $inc:{
+    quantity: 1,
+    },
+    }
+    )
+
+    const removeBook = await borrowsCollection.deleteOne({_id: new ObjectId(id)})
+res.send({ updatedResult: result, deletedResult: removeBook });
+
 })
 
     // Send a ping to confirm a successful connection
