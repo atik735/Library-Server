@@ -35,6 +35,17 @@ async function run() {
       res.send(allBooks)
     })
     
+
+    app.get("/books/new",async(req,res) =>{
+      const result = await booksCollection
+      .find()
+      .sort({_id: -1})
+      .limit(6)
+      .toArray();
+      res.send(result)
+    })
+
+
     //create clientconnection and post
     app.post("/add-book", verifyToken, async(req,res) =>{
 
