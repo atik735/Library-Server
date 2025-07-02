@@ -30,11 +30,25 @@ async function run() {
     const borrowsCollection = client.db("booksDB").collection("borrows")
     //get item and showed in client
   
-    app.get("/books", async(req,res) =>{
-      const allBooks = await booksCollection.find().toArray()
-      res.send(allBooks)
-    })
-    
+app.get("/books", async (req, res) => {
+  const { filter, sort } = req.query;
+
+  let query = {};
+  if (filter === "available") {
+    query.quantity = { $gt: 0 }; // 🟢 quantity 0 এর বেশি মানেই available
+  }
+
+  let sortOption = {};
+  if (sort === "rating") {
+    sortOption.rating = -1; // 🔽 Rating অনুযায়ী descending
+  } else if (sort === "quantity") {
+    sortOption.quantity = -1; // 🔽 Quantity descending
+  }
+
+  const result = await booksCollection.find(query).sort(sortOption).toArray();
+  res.send(result);
+});
+
 
     app.get("/books/new",async(req,res) =>{
       const result = await booksCollection
