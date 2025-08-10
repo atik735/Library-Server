@@ -35,14 +35,14 @@ app.get("/books", async (req, res) => {
 
   let query = {};
   if (filter === "available") {
-    query.quantity = { $gt: 0 }; // 🟢 quantity 0 এর বেশি মানেই available
+    query.quantity = { $gt: 0 };
   }
 
   let sortOption = {};
   if (sort === "rating") {
-    sortOption.rating = -1; // 🔽 Rating অনুযায়ী descending
+    sortOption.rating = -1; 
   } else if (sort === "quantity") {
-    sortOption.quantity = -1; // 🔽 Quantity descending
+    sortOption.quantity = -1;
   }
 
   const result = await booksCollection.find(query).sort(sortOption).toArray();
